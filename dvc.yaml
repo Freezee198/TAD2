@@ -15,3 +15,12 @@ stages:
     - train.epoch
     outs:
     - models/new_experimental_model.pth
+  test:
+    cmd: python src/test.py prepared models/new_experimental_model.pth
+    deps:
+    - prepared
+    - src/test.py
+    - models/new_experimental_model.pth
+    metrics:
+    - scores.json:
+        cache: false

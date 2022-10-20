@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import sys
+import pickle
 
 
 def main():
@@ -46,6 +47,8 @@ def main():
     np.save("prepared/valY", valY)
     np.save("prepared/testX", testX)
     np.save("prepared/testY", testY)
+    with open("prepared/CLASS NAMES", "wb") as fp:
+        pickle.dump(class_names, fp)
 
 
 def collect_images(image_files, class_names):

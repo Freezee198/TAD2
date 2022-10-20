@@ -5,14 +5,15 @@ from monai.networks.nets import EfficientNetBN
 from monai.transforms import *
 from monai.data import DataLoader
 import os.path
-import MyDataLoader
+import MyData
 import sys
+import yaml
 
 
 def main():
     if len(sys.argv) != 3:
         sys.stderr.write("Arguments error. Usage:\n")
-        sys.stderr.write("\tpython train.py features model\n")
+        sys.stderr.write("\tpython train.py data model\n")
         sys.exit(1)
 
     data_folder = sys.argv[1]
@@ -22,16 +23,13 @@ def main():
     valX = np.load(data_folder + "/valX.npy")
     valY = np.load(data_folder + "/valY.npy")
 
-    train_dir = '../data/train'
-    class_names = os.listdir(train_dir)
-
-    num_class = len(class_names)
+    num_class = params['class_number']
 
     train_transforms = Compose([
         LoadImage(image_only=True),
         Resize((-1, 1)),
-        MyDataLoader.SumDimension(2),
-        MyDataLoader.MyResize(),
+        MyData.SumDimension(2),
+        MyData.MyResize(),
         AddChannel(),
         ToTensor(),
     ])
@@ -39,15 +37,15 @@ def main():
     val_transforms = Compose([
         LoadImage(image_only=True),
         Resize((-1, 1)),
-        MyDataLoader.SumDimension(2),
-        MyDataLoader.MyResize(),
+        MyData.SumDimension(2),
+        MyData.MyResize(),
         AddChannel(),
         ToTensor(),
     ])
 
-    train_ds = MyDataLoader.MedNISTDataset(trainX, trainY, train_transforms)
+    train_ds = MyData.MedNISTDataset(trainX, trainY, train_transforms)
     train_loader = DataLoader(train_ds, batch_size=16, shuffle=True, num_workers=2)
-    val_ds = MyDataLoader.MedNISTDataset(valX, valY, val_transforms)
+    val_ds = MyData.MedNISTDataset(valX, valY, val_transforms)
     val_loader = DataLoader(val_ds, batch_size=16, num_workers=2)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -71,7 +69,7 @@ def train(model, train_ds, train_loader, val_loader, num_class, device, model_pa
     to_onehot = AsDiscrete(to_onehot=num_class)
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), 1e-5)
-    epoch_num = 20
+    epoch_num = params['epoch']
     val_interval = 1
     best_metric = -1
     best_metric_epoch = -1
@@ -134,4 +132,5 @@ def train(model, train_ds, train_loader, val_loader, num_class, device, model_pa
 
 
 if __name__ == "__main__":
+    params = yaml.safe_load(open("params.yaml"))["train"]
     main()
