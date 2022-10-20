@@ -1,0 +1,17 @@
+stages:
+  prepare:
+    cmd: python src/prepare.py data
+    deps:
+    - data
+    - src/prepare.py
+    outs:
+    - prepared
+  train:
+    cmd: python src/train.py prepared models/new_experimental_model.pth
+    deps:
+    - src/train.py
+    - prepared
+    params:
+    - train.epoch
+    outs:
+    - models/new_experimental_model.pth

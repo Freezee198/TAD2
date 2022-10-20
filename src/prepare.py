@@ -1,11 +1,18 @@
 import os
 import numpy as np
+import sys
 
 
 def main():
-    train_dir = '../data/train'
-    val_dir = '../data/valid'
-    test_dir = '../data/test'
+    if len(sys.argv) != 2:
+        sys.stderr.write("Arguments error. Usage:\n")
+        sys.stderr.write("\tpython prepare.py data-folder\n")
+        sys.exit(1)
+
+    data_folder = sys.argv[1]
+    train_dir = data_folder + '/train'
+    val_dir = data_folder + '/valid'
+    test_dir = data_folder + '/test'
     class_names = os.listdir(train_dir)
 
     train_image_files = [[os.path.join(train_dir, class_name, x)
@@ -31,12 +38,14 @@ def main():
     testX = np.array(test_file_list)
     testY = np.array(test_label_list)
 
-    np.save("../data/processed_data/trainX", trainX)
-    np.save("../data/processed_data/trainY", trainY)
-    np.save("../data/processed_data/valX", valX)
-    np.save("../data/processed_data/valY", valY)
-    np.save("../data/processed_data/testX", testX)
-    np.save("../data/processed_data/testY", testY)
+    os.makedirs(os.path.join("prepared"), exist_ok=True)
+
+    np.save("prepared/trainX", trainX)
+    np.save("prepared/trainY", trainY)
+    np.save("prepared/valX", valX)
+    np.save("prepared/valY", valY)
+    np.save("prepared/testX", testX)
+    np.save("prepared/testY", testY)
 
 
 def collect_images(image_files, class_names):

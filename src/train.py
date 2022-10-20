@@ -1,24 +1,29 @@
 import numpy as np
 import torch
-from monai.apps import download_and_extract
-from monai.config import print_config
 from monai.metrics import ROCAUCMetric
 from monai.networks.nets import EfficientNetBN
 from monai.transforms import *
 from monai.data import DataLoader
-from monai.utils import set_determinism
 import os.path
 import MyDataLoader
-
-train_dir = '../data/train'
-class_names = os.listdir(train_dir)
+import sys
 
 
 def main():
-    trainX = np.load("../data/processed_data/trainX.npy")
-    trainY = np.load("../data/processed_data/trainY.npy")
-    valX = np.load("../data/processed_data/valX.npy")
-    valY = np.load("../data/processed_data/valY.npy")
+    if len(sys.argv) != 3:
+        sys.stderr.write("Arguments error. Usage:\n")
+        sys.stderr.write("\tpython train.py features model\n")
+        sys.exit(1)
+
+    data_folder = sys.argv[1]
+    model_path = sys.argv[2]
+    trainX = np.load(data_folder + "/trainX.npy")
+    trainY = np.load(data_folder + "/trainY.npy")
+    valX = np.load(data_folder + "/valX.npy")
+    valY = np.load(data_folder + "/valY.npy")
+
+    train_dir = '../data/train'
+    class_names = os.listdir(train_dir)
 
     num_class = len(class_names)
 
@@ -55,13 +60,13 @@ def main():
         num_classes=num_class
     ).to(device)
 
-    if os.path.isfile('../models/best_metric_model.pth'):
-        model.load_state_dict(torch.load('../models/best_metric_model.pth'))
+    if os.path.isfile(model_path):
+        model.load_state_dict(torch.load(model_path))
 
-    train(model, train_ds, train_loader, val_loader, num_class, device)
+    train(model, train_ds, train_loader, val_loader, num_class, device, model_path)
 
 
-def train(model, train_ds, train_loader, val_loader, num_class, device):
+def train(model, train_ds, train_loader, val_loader, num_class, device, model_path):
     act = Activations(softmax=True)
     to_onehot = AsDiscrete(to_onehot=num_class)
     loss_function = torch.nn.CrossEntropyLoss()
@@ -120,7 +125,7 @@ def train(model, train_ds, train_loader, val_loader, num_class, device):
                 if acc_metric > best_metric:
                     best_metric = acc_metric
                     best_metric_epoch = epoch + 1
-                    torch.save(model.state_dict(), '../model/best_metric_model.pth')
+                    torch.save(model.state_dict(), model_path)
                     print('saved new best metric model')
 
                 print(f"current epoch: {epoch + 1} current AUC: {auc_result:.4f}"
