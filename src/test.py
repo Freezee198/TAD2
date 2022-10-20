@@ -19,11 +19,11 @@ def main():
         sys.stderr.write("\tpython test.py data model report\n")
         sys.exit(1)
 
+    model_name = params['model']
     data_folder = sys.argv[1]
-    model_path = sys.argv[2]
+    model_path = "models/" + sys.argv[2]
     testX = np.load(data_folder + "/testX.npy")
     testY = np.load(data_folder + "/testY.npy")
-
 
     num_class = params['class_number']
 
@@ -43,7 +43,7 @@ def main():
 
     # EfficientNetBN
     model = EfficientNetBN(
-        "efficientnet-b7",
+        model_name,
         spatial_dims=2,
         in_channels=1,
         num_classes=num_class
@@ -71,13 +71,12 @@ def test(model, test_loader, device):
                 y_pred.append(pred[i].item())
 
     report = classification_report(y_true, y_pred, target_names=class_names, digits=4, output_dict=True)
-    print(report)
     report_file = os.path.join("classification_report.json")
     with open(report_file, "w") as fd:
         json.dump(report, fd)
     score_file = os.path.join("scores.json")
     with open(score_file, "w") as fd:
-        json.dump(report['accuracy'], fd)
+        json.dump({"accuracy": report['accuracy']}, fd)
 
 
 if __name__ == "__main__":

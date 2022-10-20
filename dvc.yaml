@@ -7,20 +7,23 @@ stages:
     outs:
     - prepared
   train:
-    cmd: python src/train.py prepared models/new_experimental_model.pth
+    cmd: python src/train.py prepared new_experimental_model.pth False
     deps:
     - src/train.py
     - prepared
     params:
     - train.epoch
+    - train.model
     outs:
     - models/new_experimental_model.pth
   test:
-    cmd: python src/test.py prepared models/new_experimental_model.pth
+    cmd: python src/test.py prepared new_experimental_model.pth
     deps:
     - prepared
     - src/test.py
     - models/new_experimental_model.pth
+    params:
+      - test.model
     metrics:
     - scores.json:
         cache: false

@@ -11,13 +11,15 @@ import yaml
 
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         sys.stderr.write("Arguments error. Usage:\n")
-        sys.stderr.write("\tpython train.py data model\n")
+        sys.stderr.write("\tpython train.py data model update(bool)\n")
         sys.exit(1)
 
+    model_name = params['model']
     data_folder = sys.argv[1]
-    model_path = sys.argv[2]
+    model_path = "models/" + sys.argv[2]
+    update_model = sys.argv[3]
     trainX = np.load(data_folder + "/trainX.npy")
     trainY = np.load(data_folder + "/trainY.npy")
     valX = np.load(data_folder + "/valX.npy")
@@ -52,13 +54,13 @@ def main():
 
     # EfficientNetBN
     model = EfficientNetBN(
-        "efficientnet-b7",
+        model_name,
         spatial_dims=2,
         in_channels=1,
         num_classes=num_class
     ).to(device)
 
-    if os.path.isfile(model_path):
+    if os.path.isfile(model_path) and update_model:
         model.load_state_dict(torch.load(model_path))
 
     train(model, train_ds, train_loader, val_loader, num_class, device, model_path)
@@ -76,6 +78,8 @@ def train(model, train_ds, train_loader, val_loader, num_class, device, model_pa
     epoch_loss_values = list()
     auc_metric = ROCAUCMetric()
     metric_values = list()
+    if not os.path.exists("models"):
+        os.makedirs("models")
     for epoch in range(epoch_num):
         print('-' * 10)
         print(f"epoch {epoch + 1}/{epoch_num}")

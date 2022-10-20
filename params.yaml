@@ -1,6 +1,8 @@
 train:
-  epoch: 5
+  epoch: 1
   class_number: 75
+  model: "efficientnet-b4"
 
 test:
   class_number: 75
+  model: "efficientnet-b4"
