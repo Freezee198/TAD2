@@ -1,15 +1,14 @@
 import numpy as np
-import cv2
 import torch
 from monai.apps import download_and_extract
 from monai.config import print_config
 from monai.metrics import ROCAUCMetric
-from monai.networks.nets import DenseNet121, EfficientNetBN
+from monai.networks.nets import EfficientNetBN
 from monai.transforms import *
-from monai.data import Dataset, DataLoader
+from monai.data import DataLoader
 from monai.utils import set_determinism
-from sklearn.metrics import classification_report
 import os.path
+import MyDataLoader
 
 train_dir = '../data/train'
 class_names = os.listdir(train_dir)
@@ -20,16 +19,14 @@ def main():
     trainY = np.load("../data/processed_data/trainY.npy")
     valX = np.load("../data/processed_data/valX.npy")
     valY = np.load("../data/processed_data/valY.npy")
-    testX = np.load("../data/processed_data/testX.npy")
-    testY = np.load("../data/processed_data/testY.npy")
 
-    num_class = 75
+    num_class = len(class_names)
 
     train_transforms = Compose([
         LoadImage(image_only=True),
         Resize((-1, 1)),
-        SumDimension(2),
-        MyResize(),
+        MyDataLoader.SumDimension(2),
+        MyDataLoader.MyResize(),
         AddChannel(),
         ToTensor(),
     ])
@@ -37,18 +34,16 @@ def main():
     val_transforms = Compose([
         LoadImage(image_only=True),
         Resize((-1, 1)),
-        SumDimension(2),
-        MyResize(),
+        MyDataLoader.SumDimension(2),
+        MyDataLoader.MyResize(),
         AddChannel(),
         ToTensor(),
     ])
 
-    train_ds = MedNISTDataset(trainX, trainY, train_transforms)
+    train_ds = MyDataLoader.MedNISTDataset(trainX, trainY, train_transforms)
     train_loader = DataLoader(train_ds, batch_size=16, shuffle=True, num_workers=2)
-    val_ds = MedNISTDataset(valX, valY, val_transforms)
+    val_ds = MyDataLoader.MedNISTDataset(valX, valY, val_transforms)
     val_loader = DataLoader(val_ds, batch_size=16, num_workers=2)
-    test_ds = MedNISTDataset(testX, testY, val_transforms)
-    test_loader = DataLoader(test_ds, batch_size=16, num_workers=2)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -60,27 +55,10 @@ def main():
         num_classes=num_class
     ).to(device)
 
-    if os.path.isfile('../model/best_metric_model.pth'):
-        model.load_state_dict(torch.load('best_metric_model.pth'))
+    if os.path.isfile('../models/best_metric_model.pth'):
+        model.load_state_dict(torch.load('../models/best_metric_model.pth'))
 
-    # train(model, train_ds, train_loader, val_loader, num_class, device)
-    test(model, test_loader, device)
-
-
-def test(model, test_loader, device):
-    model.eval()
-    y_true = list()
-    y_pred = list()
-
-    with torch.no_grad():
-        for test_data in test_loader:
-            test_images, test_labels = test_data[0].to(device), test_data[1].to(device)
-            pred = model(test_images).argmax(dim=1)
-            for i in range(len(pred)):
-                y_true.append(test_labels[i].item())
-                y_pred.append(pred[i].item())
-
-    print(classification_report(y_true, y_pred, target_names=class_names, digits=4))
+    train(model, train_ds, train_loader, val_loader, num_class, device)
 
 
 def train(model, train_ds, train_loader, val_loader, num_class, device):
@@ -88,7 +66,7 @@ def train(model, train_ds, train_loader, val_loader, num_class, device):
     to_onehot = AsDiscrete(to_onehot=num_class)
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), 1e-5)
-    epoch_num = 10
+    epoch_num = 20
     val_interval = 1
     best_metric = -1
     best_metric_epoch = -1
@@ -148,38 +126,6 @@ def train(model, train_ds, train_loader, val_loader, num_class, device):
                 print(f"current epoch: {epoch + 1} current AUC: {auc_result:.4f}"
                       f" current accuracy: {acc_metric:.4f} best AUC: {best_metric:.4f}"
                       f" at epoch: {best_metric_epoch}")
-
-
-class SumDimension(Transform):
-    def __init__(self, dim=1):
-        self.dim = dim
-
-    def __call__(self, inputs):
-        return inputs.sum(self.dim)
-
-
-class MyResize(Transform):
-    def __init__(self, size=(120, 120)):
-        self.size = size
-
-    def __call__(self, inputs):
-        image = cv2.resize(np.array(inputs), dsize=(self.size[1], self.size[0]), interpolation=cv2.INTER_CUBIC)
-        image2 = image[20:100, 20:100]
-        return image2
-
-
-class MedNISTDataset(Dataset):
-
-    def __init__(self, image_files, labels, transforms):
-        self.image_files = image_files
-        self.labels = labels
-        self.transforms = transforms
-
-    def __len__(self):
-        return len(self.image_files)
-
-    def __getitem__(self, index):
-        return self.transforms(self.image_files[index]), self.labels[index]
 
 
 if __name__ == "__main__":
