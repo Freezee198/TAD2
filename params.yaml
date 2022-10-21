@@ -1,8 +1,8 @@
 train:
   epoch: 20
   class_number: 75
-  model: "efficientnet-b7"
+  model: "efficientnet-b4"
 
 test:
   class_number: 75
-  model: "efficientnet-b7"
+  model: "efficientnet-b4"
