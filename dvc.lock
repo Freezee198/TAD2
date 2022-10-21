@@ -4,23 +4,23 @@ stages:
     cmd: python src/prepare.py data
     deps:
     - path: data
-      md5: 7d2a3903cb9a4faff78ac3823389d8ed.dir
-      size: 261326366
-      nfiles: 10042
+      md5: 4373f2dd2fbf4a57f115c713222c4843.dir
+      size: 303733898
+      nfiles: 13792
     - path: src/prepare.py
       md5: 0777a2f9dbccb5976e7b05f8ebad9b8f
       size: 2567
     outs:
     - path: prepared
-      md5: ff6ad706a14b8d829c0e2fc64cf0f39a.dir
-      size: 1800793
+      md5: 9d565a49d5ccc882fef532fbdf84e3b8.dir
+      size: 6438433
       nfiles: 7
   train:
     cmd: python src/train.py prepared new_experimental_model.pth False
     deps:
     - path: prepared
-      md5: ff6ad706a14b8d829c0e2fc64cf0f39a.dir
-      size: 1800793
+      md5: 9d565a49d5ccc882fef532fbdf84e3b8.dir
+      size: 6438433
       nfiles: 7
     - path: src/train.py
       md5: b7ab2e8c771e6830cf6a38d90b845a2e
@@ -31,17 +31,17 @@ stages:
         train.model: efficientnet-b7
     outs:
     - path: models/new_experimental_model.pth
-      md5: 906a233fef8a5665419daac77ed88417
+      md5: 5e4c38348a035155092a14409b67519f
       size: 257577577
   test:
     cmd: python src/test.py prepared new_experimental_model.pth
     deps:
     - path: models/new_experimental_model.pth
-      md5: 906a233fef8a5665419daac77ed88417
+      md5: 5e4c38348a035155092a14409b67519f
       size: 257577577
     - path: prepared
-      md5: ff6ad706a14b8d829c0e2fc64cf0f39a.dir
-      size: 1800793
+      md5: 9d565a49d5ccc882fef532fbdf84e3b8.dir
+      size: 6438433
       nfiles: 7
     - path: src/test.py
       md5: a260e88926eaeab26663a39c02b4983b
@@ -51,5 +51,5 @@ stages:
         test.model: efficientnet-b7
     outs:
     - path: scores.json
-      md5: 7a20a096b2423d662aa7e9b860b87417
-      size: 18
+      md5: 20736385fe957795313f6fc95758d533
+      size: 32
