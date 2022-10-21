@@ -28,17 +28,17 @@ stages:
     params:
       params.yaml:
         train.epoch: 20
-        train.model: efficientnet-b4
+        train.model: efficientnet-b0
     outs:
     - path: models/new_experimental_model.pth
-      md5: 02703485245e115bac6ece8420df1d04
-      size: 71476349
+      md5: 31eca13e36115eb0632f9028293c5777
+      size: 16705393
   test:
     cmd: python src/test.py prepared new_experimental_model.pth
     deps:
     - path: models/new_experimental_model.pth
-      md5: 02703485245e115bac6ece8420df1d04
-      size: 71476349
+      md5: 31eca13e36115eb0632f9028293c5777
+      size: 16705393
     - path: prepared
       md5: 9d565a49d5ccc882fef532fbdf84e3b8.dir
       size: 6438433
@@ -48,8 +48,8 @@ stages:
       size: 2429
     params:
       params.yaml:
-        test.model: efficientnet-b4
+        test.model: efficientnet-b0
     outs:
     - path: scores.json
-      md5: a99bb908698171e6379e88bd98d6e372
+      md5: 892def34d7fbc26143a5b9317773193f
       size: 32
